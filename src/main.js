@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Field } from './entities/Field.js';
 
 const container = document.getElementById('canvas-container');
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -27,6 +28,8 @@ window.addEventListener('resize', () => {
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+const field = new Field(scene);
 
 function animate() {
   requestAnimationFrame(animate);
