@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Football Original: First Start</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #000; overflow: hidden; }
+    #canvas-container { width: 100vw; height: 100vh; position: relative; }
+    canvas { display: block; }
+    #hud { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; }
+    #action-ui { position: absolute; bottom: 0; left: 0; width: 100%; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="hud"></div>
+    <div id="action-ui"></div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
