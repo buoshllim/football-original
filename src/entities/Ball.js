@@ -3,7 +3,7 @@ import { FIELD } from './Field.js';
 
 const FRICTION = 0.97;
 const MIN_SPEED = 0.01;
-const BALL_RADIUS = 0.3;
+const BALL_RADIUS = 0.55;
 
 export class Ball {
   constructor(scene) {

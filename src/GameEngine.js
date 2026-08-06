@@ -109,13 +109,17 @@ export class GameEngine {
     ];
     const frozen = this.timeStop.frozen;
 
-    // Ball follows possessor during time-stop
+    // Ball follows possessor — offset slightly in front so it's visible
     const possessor = this.possession.possessor;
     if (possessor) {
-      this.ball.position.x = possessor.position.x;
-      this.ball.position.z = possessor.position.z;
-      this.ball.mesh.position.x = possessor.position.x;
-      this.ball.mesh.position.z = possessor.position.z;
+      const attackDir = possessor.team === 'home' ? -1 : 1;
+      const bx = possessor.position.x;
+      const bz = possessor.position.z + attackDir * 0.9;
+      this.ball.position.x = bx;
+      this.ball.position.z = bz;
+      this.ball.mesh.position.x = bx;
+      this.ball.mesh.position.z = bz;
+      this.ball.mesh.position.y = 0.55;
     } else {
       this.ball.update(dt);
     }
