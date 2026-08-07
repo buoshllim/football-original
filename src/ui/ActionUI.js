@@ -1,59 +1,70 @@
 export class ActionUI {
-  constructor(containerId) {
-    this.container = document.getElementById(containerId);
-    this.activeAction = 'ground';
-    this._listeners = {};
+  constructor() {
+    this._panel = null;
+    this._statusEl = null;
+    this._action = 'ground';
+    this._onChange = null;
     this._build();
   }
 
   _build() {
-    this.container.innerHTML = `
-      <div id="action-panel" style="
-        display: none;
-        position: absolute;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        gap: 12px;
-        flex-direction: row;
-      ">
-        <button class="action-btn" data-action="ground" style="background:#2563eb">땅볼 패스</button>
-        <button class="action-btn" data-action="lob" style="background:#7c3aed">로빙 패스</button>
-        <button class="action-btn" data-action="shot" style="background:#dc2626">슛!</button>
+    const wrap = document.createElement('div');
+    wrap.id = 'action-wrap';
+    wrap.style.cssText = `
+      position: fixed; bottom: 0; left: 0; width: 100%;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; padding-bottom: 20px; pointer-events: none;
+    `;
+    wrap.innerHTML = `
+      <div id="status-msg" style="
+        font-family:monospace; font-size:20px; font-weight:bold;
+        color:#fbbf24; text-shadow:1px 1px 4px #000; min-height:28px;
+      "></div>
+      <div id="action-panel" style="display:none; gap:10px; flex-direction:row; pointer-events:all;">
+        <button class="abtn" data-a="ground" style="background:#2563eb">⚽ 땅볼 패스</button>
+        <button class="abtn" data-a="lob"    style="background:#7c3aed">🌈 로빙 패스</button>
+        <button class="abtn" data-a="shot"   style="background:#dc2626">🔥 슛!</button>
       </div>
       <style>
-        .action-btn {
-          padding: 14px 22px;
-          border: none;
-          border-radius: 10px;
-          color: white;
-          font-size: 17px;
-          font-weight: bold;
-          cursor: pointer;
-          touch-action: manipulation;
-          pointer-events: all;
+        .abtn {
+          padding:14px 20px; border:none; border-radius:10px;
+          color:#fff; font-size:16px; font-weight:bold;
+          cursor:pointer; touch-action:manipulation;
         }
-        .action-btn.active { outline: 3px solid #fbbf24; }
-        #action-panel { display: none; }
-        #action-panel.visible { display: flex; }
+        .abtn.on { outline:3px solid #ffd700; }
+        #action-panel.show { display:flex !important; }
       </style>
     `;
+    document.body.appendChild(wrap);
 
-    this.panel = document.getElementById('action-panel');
+    this._panel    = wrap.querySelector('#action-panel');
+    this._statusEl = wrap.querySelector('#status-msg');
 
-    this.panel.querySelectorAll('.action-btn').forEach(btn => {
+    this._panel.querySelectorAll('.abtn').forEach(btn => {
       btn.addEventListener('click', () => {
-        this.activeAction = btn.dataset.action;
-        this.panel.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        if (this._listeners.actionChange) this._listeners.actionChange(this.activeAction);
+        this._action = btn.dataset.a;
+        this._panel.querySelectorAll('.abtn').forEach(b => b.classList.remove('on'));
+        btn.classList.add('on');
+        if (this._onChange) this._onChange(this._action);
       });
     });
 
-    this.panel.querySelector('[data-action="ground"]').classList.add('active');
+    this._panel.querySelector('[data-a="ground"]').classList.add('on');
   }
 
-  show() { this.panel.classList.add('visible'); }
-  hide() { this.panel.classList.remove('visible'); }
-  on(event, cb) { this._listeners[event] = cb; }
+  showActions() {
+    this._panel.classList.add('show');
+  }
+
+  hideActions() {
+    this._panel.classList.remove('show');
+  }
+
+  setStatus(msg) {
+    this._statusEl.textContent = msg;
+  }
+
+  get action() { return this._action; }
+
+  onActionChange(cb) { this._onChange = cb; }
 }

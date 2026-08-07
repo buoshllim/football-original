@@ -1,61 +1,47 @@
 import { Player } from './Player.js';
-import { GoalKeeper } from './GoalKeeper.js';
+import { dist2D } from '../utils/math.js';
 
-function formation7v7(side) {
+// 7v7 formation: GK + 2DEF + 3MID + 1FWD
+// side: 1=home(attacks toward z<0), -1=away(attacks toward z>0)
+function formation(side) {
   const s = side;
   return [
-    { x: 0,   z: s * 18, role: 'gk' },
-    { x: -6,  z: s * 13, role: 'def' },
-    { x: 6,   z: s * 13, role: 'def' },
-    { x: -9,  z: s * 7,  role: 'mid' },
-    { x: 0,   z: s * 6,  role: 'mid' },
-    { x: 9,   z: s * 7,  role: 'mid' },
-    { x: 0,   z: s * 2,  role: 'fwd' },
+    { x:  0,  z: s*18, role: 'gk'  },
+    { x: -6,  z: s*13, role: 'def' },
+    { x:  6,  z: s*13, role: 'def' },
+    { x: -9,  z: s*7,  role: 'mid' },
+    { x:  0,  z: s*6,  role: 'mid' },
+    { x:  9,  z: s*7,  role: 'mid' },
+    { x:  0,  z: s*2,  role: 'fwd' },
   ];
 }
 
 export class Team {
   constructor(scene, { name, color, side }) {
-    this.name = name;
-    this.color = color;
-    this.side = side;
-    this.players = [];
-    this.gk = null;
-    this._build(scene);
+    this.name  = name;
+    this.side  = side;
+    this.players = formation(side).map((pos, i) =>
+      new Player(scene, { ...pos, color, id: `${name}_${i}`, team: name })
+    );
   }
 
-  _build(scene) {
-    formation7v7(this.side).forEach((pos, i) => {
-      const id = `${this.name}_${i}`;
-      if (pos.role === 'gk') {
-        this.gk = new GoalKeeper(scene, { ...pos, color: this.color, id, team: this.name });
-        this.players.push(this.gk);
-      } else {
-        this.players.push(new Player(scene, { ...pos, color: this.color, id, team: this.name }));
-      }
-    });
-  }
-
-  findNearestTo(pos) {
-    let nearest = null;
-    let nearestDist = Infinity;
+  nearestTo(x, z, excludeGK = false) {
+    let best = null, bestD = Infinity;
     for (const p of this.players) {
-      const dx = p.position.x - pos.x;
-      const dz = p.position.z - pos.z;
-      const dist = Math.sqrt(dx * dx + dz * dz);
-      if (dist < nearestDist) { nearestDist = dist; nearest = p; }
+      if (excludeGK && p.id.endsWith('_0')) continue;
+      const d = dist2D(p.pos.x, p.pos.z, x, z);
+      if (d < bestD) { bestD = d; best = p; }
     }
-    return nearest;
+    return best;
   }
 
-  allPlayers() {
-    return this.players;
+  driftHome(possessor) {
+    for (const p of this.players) {
+      if (p !== possessor) p.driftHome();
+    }
   }
 
-  update(dt, frozen, ballPos) {
-    this.players.forEach(p => {
-      if (p.isGK) p.autoUpdate(dt, ballPos, frozen);
-      else p.update(dt, frozen);
-    });
+  update(dt) {
+    this.players.forEach(p => p.update(dt));
   }
 }

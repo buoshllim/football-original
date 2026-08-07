@@ -1,53 +1,46 @@
 export class HUD {
-  constructor(containerId) {
-    this.container = document.getElementById(containerId);
-    this._build();
-  }
-
-  _build() {
-    this.container.innerHTML = `
+  constructor() {
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position:fixed; top:0; left:0; width:100%; pointer-events:none;
+      font-family:monospace;
+    `;
+    el.innerHTML = `
       <div style="
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: rgba(0,0,0,0.75);
-        color: white;
-        padding: 10px 24px;
-        font-family: monospace;
-        font-size: 22px;
-        font-weight: bold;
+        display:flex; justify-content:space-between; align-items:center;
+        background:rgba(0,0,0,0.75); color:#fff; padding:10px 24px; font-size:22px; font-weight:bold;
       ">
-        <span id="hud-home">🔵 홈 0</span>
-        <span id="hud-timer">05:00</span>
-        <span id="hud-away">0 어웨이 🔴</span>
+        <span id="h-home">🔵 홈 0</span>
+        <span id="h-time">05:00</span>
+        <span id="h-away">0 어웨이 🔴</span>
       </div>
-      <div id="hud-msg" style="
-        text-align: center;
-        font-size: 40px;
-        font-weight: bold;
-        color: #fbbf24;
-        text-shadow: 2px 2px 6px #000;
-        min-height: 54px;
-        font-family: monospace;
-        padding-top: 4px;
+      <div id="h-msg" style="
+        text-align:center; font-size:42px; font-weight:bold;
+        color:#fbbf24; text-shadow:2px 2px 6px #000; min-height:56px; padding-top:4px;
       "></div>
     `;
-    this.homeEl = document.getElementById('hud-home');
-    this.awayEl = document.getElementById('hud-away');
-    this.timerEl = document.getElementById('hud-timer');
-    this.msgEl = document.getElementById('hud-msg');
+    document.body.appendChild(el);
+
+    this._home = el.querySelector('#h-home');
+    this._away = el.querySelector('#h-away');
+    this._time = el.querySelector('#h-time');
+    this._msg  = el.querySelector('#h-msg');
+    this._msgTimer = null;
   }
 
   update(homeScore, awayScore, secondsLeft) {
-    this.homeEl.textContent = `🔵 홈 ${homeScore}`;
-    this.awayEl.textContent = `${awayScore} 어웨이 🔴`;
-    const m = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
-    const s = Math.floor(secondsLeft % 60).toString().padStart(2, '0');
-    this.timerEl.textContent = `${m}:${s}`;
+    this._home.textContent = `🔵 홈 ${homeScore}`;
+    this._away.textContent = `${awayScore} 어웨이 🔴`;
+    const m = String(Math.floor(secondsLeft / 60)).padStart(2, '0');
+    const s = String(Math.floor(secondsLeft % 60)).padStart(2, '0');
+    this._time.textContent = `${m}:${s}`;
   }
 
-  showMessage(msg, durationMs = 2000) {
-    this.msgEl.textContent = msg;
-    if (durationMs > 0) setTimeout(() => { this.msgEl.textContent = ''; }, durationMs);
+  flash(msg, ms = 2500) {
+    this._msg.textContent = msg;
+    clearTimeout(this._msgTimer);
+    if (ms > 0) this._msgTimer = setTimeout(() => { this._msg.textContent = ''; }, ms);
   }
+
+  persist(msg) { this._msg.textContent = msg; }
 }

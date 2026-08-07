@@ -1,61 +1,55 @@
 import * as THREE from 'three';
+import { lerp, dist2D } from '../utils/math.js';
 
-const PLAYER_SPEED = 8;
-const PLAYER_HEIGHT = 1.8;
-const PLAYER_RADIUS = 0.4;
+const HEIGHT = 1.8;
+const RADIUS = 0.4;
+const SPEED  = 7; // units/sec
 
 export class Player {
   constructor(scene, { x, z, color, id, team }) {
-    this.id = id;
+    this.id   = id;
     this.team = team;
-    this.position = { x, z };
-    this.target = { x, z };
+    this.pos  = { x, z };
+    this.homePos = { x, z }; // formation position
+    this.target  = { x, z };
     this.hasBall = false;
-    this.isGK = false;
 
-    const geo = new THREE.CylinderGeometry(PLAYER_RADIUS, PLAYER_RADIUS, PLAYER_HEIGHT, 16);
+    const geo = new THREE.CylinderGeometry(RADIUS, RADIUS, HEIGHT, 12);
     const mat = new THREE.MeshLambertMaterial({ color });
     this.mesh = new THREE.Mesh(geo, mat);
     this.mesh.castShadow = true;
-    this.mesh.position.set(x, PLAYER_HEIGHT / 2, z);
+    this.mesh.position.set(x, HEIGHT / 2, z);
     scene.add(this.mesh);
 
-    const ringGeo = new THREE.RingGeometry(PLAYER_RADIUS + 0.1, PLAYER_RADIUS + 0.35, 16);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffff00, side: THREE.DoubleSide });
-    this.ring = new THREE.Mesh(ringGeo, ringMat);
-    this.ring.rotation.x = -Math.PI / 2;
-    this.ring.position.y = -PLAYER_HEIGHT / 2 + 0.05;
-    this.ring.visible = false;
-    this.mesh.add(this.ring);
+    // Ball indicator dot above head
+    const dotGeo = new THREE.SphereGeometry(0.2, 8, 8);
+    const dotMat = new THREE.MeshBasicMaterial({ color: 0xffd700 });
+    this.dot = new THREE.Mesh(dotGeo, dotMat);
+    this.dot.position.y = HEIGHT / 2 + 0.35;
+    this.dot.visible = false;
+    this.mesh.add(this.dot);
   }
 
-  moveTo(x, z) {
-    this.target = { x, z };
+  setHasBall(has) {
+    this.hasBall = has;
+    this.dot.visible = has;
   }
 
-  showBallIndicator(visible) {
-    this.ring.visible = visible;
-    if (visible) this.ring.material.color.setHex(0xffff00);
-  }
+  moveTo(x, z) { this.target = { x, z }; }
 
-  update(dt, frozen) {
-    if (frozen) return;
+  driftHome() { this.target = { ...this.homePos }; }
 
-    const dx = this.target.x - this.position.x;
-    const dz = this.target.z - this.position.z;
-    const dist = Math.sqrt(dx * dx + dz * dz);
-
-    if (dist > 0.1) {
-      const speed = Math.min(PLAYER_SPEED * dt, dist);
-      this.position.x += (dx / dist) * speed;
-      this.position.z += (dz / dist) * speed;
-    }
-
-    this.mesh.position.x = this.position.x;
-    this.mesh.position.z = this.position.z;
-
-    if (dist > 0.5) {
+  update(dt) {
+    const dx = this.target.x - this.pos.x;
+    const dz = this.target.z - this.pos.z;
+    const d  = Math.sqrt(dx * dx + dz * dz);
+    if (d > 0.05) {
+      const step = Math.min(SPEED * dt, d);
+      this.pos.x += (dx / d) * step;
+      this.pos.z += (dz / d) * step;
       this.mesh.rotation.y = Math.atan2(dx, dz);
     }
+    this.mesh.position.x = this.pos.x;
+    this.mesh.position.z = this.pos.z;
   }
 }
